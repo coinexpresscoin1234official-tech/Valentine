@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💌 Valentine Maker</title>
+<title>💌 Will You Be Mine?</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /*──────────────────────────────────────────
@@ -156,23 +156,7 @@ h1 em{color:var(--rose);font-style:italic}
   background:var(--petal);border-color:var(--roselt);color:var(--rose);
 }
 
-/* photo upload */
-.photo-box{
-  border:2px dashed var(--border);border-radius:14px;
-  padding:22px 16px;text-align:center;cursor:pointer;
-  transition:border-color .2s,background .2s;position:relative;
-}
-.photo-box:hover{border-color:var(--roselt);background:var(--petal)}
-.photo-box .ph-icon{font-size:1.8rem;margin-bottom:6px}
-.photo-box .ph-text{font-size:.82rem;color:var(--muted);font-weight:300}
-.photo-box .ph-text strong{color:var(--rose);font-weight:500}
-.photo-box img{
-  width:100%;max-height:140px;object-fit:cover;border-radius:10px;display:block;
-}
-.photo-box video{
-  width:100%;max-height:140px;object-fit:cover;border-radius:10px;display:block;
-}
-#photoInput{display:none}
+
 
 /* generate btn */
 .btn-generate{
@@ -221,15 +205,20 @@ h1 em{color:var(--rose);font-style:italic}
 ──────────────────────────────────────────*/
 #pageValentine{flex-direction:column}
 
-/* media frame */
-.media-frame{
-  width:100%;border-radius:18px;overflow:hidden;background:var(--blush);
-  min-height:170px;display:flex;align-items:center;justify-content:center;
-  margin-bottom:20px;position:relative;animation:fadeUp .6s .15s both;
+.yes-emoji{
+  font-size:5.5rem;display:block;text-align:center;
+  margin-bottom:18px;animation:yesBounce 1s cubic-bezier(.36,.07,.19,.97) both, floatLoop 2s 1s ease-in-out infinite alternate;
 }
-.media-frame video,.media-frame img{width:100%;height:auto;max-height:240px;object-fit:cover;display:block;border-radius:18px}
-.placeholder-emoji{font-size:4rem;animation:bounce 1.2s ease-in-out infinite alternate}
-@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+@keyframes yesBounce{
+  0%{transform:scale(0) rotate(-15deg);opacity:0}
+  60%{transform:scale(1.2) rotate(5deg);opacity:1}
+  80%{transform:scale(.95) rotate(-2deg)}
+  100%{transform:scale(1) rotate(0deg)}
+}
+@keyframes floatLoop{
+  from{transform:translateY(0) scale(1)}
+  to{transform:translateY(-10px) scale(1.05)}
+}
 .yes-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:600;color:var(--rose);margin-bottom:8px;animation:fadeUp .6s .3s both}
 .yes-sub{font-size:.88rem;color:var(--muted);font-weight:300;line-height:1.75;animation:fadeUp .6s .45s both}
 
@@ -315,22 +304,6 @@ h1 em{color:var(--rose);font-style:italic}
         </div>
       </div>
 
-      <div class="field-group">
-        <label>Personal Message <span style="text-transform:none;font-weight:300;font-size:.75rem;color:var(--muted)">(optional)</span></label>
-        <textarea id="customMsg" placeholder="Add something just for them… a memory, an inside joke, anything 💌"></textarea>
-      </div>
-
-      <div class="field-group">
-        <label>Add a Photo or Video 🎥 <span style="text-transform:none;font-weight:300;font-size:.75rem;color:var(--muted)">(optional)</span></label>
-        <div class="photo-box" id="photoBox" onclick="document.getElementById('photoInput').click()">
-          <div id="photoPlaceholder">
-            <div class="ph-icon">📸</div>
-            <div class="ph-text"><strong>Click to upload</strong> or drag & drop<br>Photo or short video</div>
-          </div>
-        </div>
-        <input type="file" id="photoInput" accept="image/*,video/*">
-      </div>
-
       <div class="divider"><span>ready?</span></div>
 
       <button class="btn-generate" onclick="generate()">
@@ -383,9 +356,7 @@ h1 em{color:var(--rose);font-style:italic}
 
     <!-- Screen 3: YES! -->
     <div class="card" id="s3" style="display:none">
-      <div class="media-frame" id="mediaFrame">
-        <div class="placeholder-emoji" id="mediaEmoji">🥰</div>
-      </div>
+      <span class="yes-emoji" id="yesEmoji">🥰</span>
       <p class="yes-title" id="yesTitle">Yay!! 🎉</p>
       <p class="yes-sub" id="yesSub">You just made my whole world light up.<br>I love you more than words can ever say. 💖</p>
     </div>
@@ -426,49 +397,7 @@ document.querySelectorAll('.tone-pill').forEach(p=>{
   });
 });
 
-/*──────────────────────────────────────────
-  PHOTO / VIDEO UPLOAD IN CUSTOMIZER
-──────────────────────────────────────────*/
-let mediaDataURL = null;
-let mediaType    = null;
 
-document.getElementById('photoInput').addEventListener('change', e=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev=>{
-    mediaDataURL = ev.target.result;
-    mediaType = file.type.startsWith('video') ? 'video' : 'image';
-    const box = document.getElementById('photoBox');
-    document.getElementById('photoPlaceholder').style.display='none';
-    // remove old preview
-    const old = box.querySelector('img,video');
-    if(old) old.remove();
-    if(mediaType==='video'){
-      const v=document.createElement('video');
-      v.src=mediaDataURL; v.muted=true; v.autoplay=true; v.loop=true; v.playsInline=true;
-      box.appendChild(v);
-    } else {
-      const img=document.createElement('img');
-      img.src=mediaDataURL;
-      box.appendChild(img);
-    }
-  };
-  reader.readAsDataURL(file);
-});
-
-// drag onto customizer
-document.addEventListener('dragover',e=>e.preventDefault());
-document.addEventListener('drop',e=>{
-  e.preventDefault();
-  const f=e.dataTransfer.files[0];
-  if(!f) return;
-  document.getElementById('photoInput').files; // just trigger
-  const dt = new DataTransfer();
-  dt.items.add(f);
-  document.getElementById('photoInput').files = dt.files;
-  document.getElementById('photoInput').dispatchEvent(new Event('change'));
-});
 
 /*──────────────────────────────────────────
   CONTENT GENERATOR
@@ -514,7 +443,7 @@ function generate(){
   const theirName = document.getElementById('theirName').value.trim() || 'My Love';
   const yourName  = document.getElementById('yourName').value.trim()  || 'Someone Special';
   const relation  = document.getElementById('relation').value;
-  const customMsg = document.getElementById('customMsg').value.trim();
+  const customMsg = '';
   const tone      = selectedTone;
 
   // Build params — keep media out of URL (too large), store in sessionStorage
@@ -526,15 +455,6 @@ function generate(){
     msg:  customMsg,
     v:    '1'
   });
-
-  // Store media in sessionStorage (survives page navigation but not cross-device share)
-  if(mediaDataURL){
-    try{ sessionStorage.setItem('val_media', mediaDataURL); sessionStorage.setItem('val_mediatype', mediaType); }
-    catch(e){ /* storage full, skip */ }
-  } else {
-    sessionStorage.removeItem('val_media');
-    sessionStorage.removeItem('val_mediatype');
-  }
 
   const url = location.href.split('?')[0] + '?' + params.toString();
   document.getElementById('shareUrl').value = url;
@@ -554,12 +474,7 @@ function copyLink(){
 function resetCustomizer(){
   document.getElementById('theirName').value='';
   document.getElementById('yourName').value='';
-  document.getElementById('customMsg').value='';
   document.getElementById('shareBox').style.display='none';
-  mediaDataURL=null; mediaType=null;
-  document.getElementById('photoPlaceholder').style.display='block';
-  const old=document.querySelector('#photoBox img, #photoBox video');
-  if(old) old.remove();
 }
 
 function previewValentine(){
@@ -595,8 +510,6 @@ function loadValentinePage(params){
   document.getElementById('yesTitle').textContent = tc.yesTitle(theirName);
   document.getElementById('yesSub').innerHTML     = tc.yesSub(theirName).replace(/\\n/g,'<br>');
 
-  // Media loaded only when Yes is clicked (see onYes)
-
   // Show page
   document.getElementById('pageCustom').classList.remove('active');
   document.getElementById('pageValentine').classList.add('active');
@@ -615,30 +528,7 @@ function showScreen(id){
   });
 }
 
-function onYes(){
-  showScreen('s3');
-  launchConfetti();
-  launchHearts();
-  // Inject media now that user clicked Yes
-  const storedMedia = sessionStorage.getItem('val_media');
-  const storedType  = sessionStorage.getItem('val_mediatype');
-  if(storedMedia){
-    const frame = document.getElementById('mediaFrame');
-    const emoji = document.getElementById('mediaEmoji');
-    if(emoji) emoji.style.display='none';
-    // avoid duplicates
-    if(!frame.querySelector('video,img')){
-      if(storedType==='video'){
-        const v=document.createElement('video');
-        v.src=storedMedia; v.autoplay=true; v.loop=true; v.muted=false; v.playsInline=true;
-        frame.appendChild(v); v.play().catch(()=>{});
-      } else {
-        const img=document.createElement('img');
-        img.src=storedMedia; frame.appendChild(img);
-      }
-    }
-  }
-}
+function onYes(){ showScreen('s3'); launchConfetti(); launchHearts(); }
 function onNo() { showScreen('s2'); placeRunBtn(); }
 function onNo2(){ showScreen('s1'); }
 
