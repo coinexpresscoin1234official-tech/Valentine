@@ -595,21 +595,7 @@ function loadValentinePage(params){
   document.getElementById('yesTitle').textContent = tc.yesTitle(theirName);
   document.getElementById('yesSub').innerHTML     = tc.yesSub(theirName).replace(/\\n/g,'<br>');
 
-  // Media
-  const storedMedia = sessionStorage.getItem('val_media');
-  const storedType  = sessionStorage.getItem('val_mediatype');
-  if(storedMedia){
-    const frame = document.getElementById('mediaFrame');
-    document.getElementById('mediaEmoji').style.display='none';
-    if(storedType==='video'){
-      const v=document.createElement('video');
-      v.src=storedMedia; v.autoplay=true; v.loop=true; v.muted=false; v.playsInline=true;
-      frame.appendChild(v); v.play().catch(()=>{});
-    } else {
-      const img=document.createElement('img');
-      img.src=storedMedia; frame.appendChild(img);
-    }
-  }
+  // Media loaded only when Yes is clicked (see onYes)
 
   // Show page
   document.getElementById('pageCustom').classList.remove('active');
@@ -629,14 +615,49 @@ function showScreen(id){
   });
 }
 
-function onYes(){ showScreen('s3'); launchConfetti(); launchHearts(); }
+function onYes(){
+  showScreen('s3');
+  launchConfetti();
+  launchHearts();
+  // Inject media now that user clicked Yes
+  const storedMedia = sessionStorage.getItem('val_media');
+  const storedType  = sessionStorage.getItem('val_mediatype');
+  if(storedMedia){
+    const frame = document.getElementById('mediaFrame');
+    const emoji = document.getElementById('mediaEmoji');
+    if(emoji) emoji.style.display='none';
+    // avoid duplicates
+    if(!frame.querySelector('video,img')){
+      if(storedType==='video'){
+        const v=document.createElement('video');
+        v.src=storedMedia; v.autoplay=true; v.loop=true; v.muted=false; v.playsInline=true;
+        frame.appendChild(v); v.play().catch(()=>{});
+      } else {
+        const img=document.createElement('img');
+        img.src=storedMedia; frame.appendChild(img);
+      }
+    }
+  }
+}
 function onNo() { showScreen('s2'); placeRunBtn(); }
 function onNo2(){ showScreen('s1'); }
+
+let fleeInterval = null;
 
 function placeRunBtn(){
   const b=document.getElementById('btnRun');
   b.style.left='50%'; b.style.top='62%'; b.style.transform='translate(-50%,-50%)';
+  // On touch devices: auto-move every 900ms so they can never tap it
+  if(fleeInterval) clearInterval(fleeInterval);
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if(isTouch){
+    fleeInterval = setInterval(()=>{
+      if(document.getElementById('s2').style.display!=='none') flee();
+      else { clearInterval(fleeInterval); fleeInterval=null; }
+    }, 900);
+  }
 }
+
 function flee(){
   const b=document.getElementById('btnRun');
   const pad=60,bw=b.offsetWidth||120,bh=b.offsetHeight||46;
